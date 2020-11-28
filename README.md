@@ -10,3 +10,8 @@ Console application that uses NASA API described here (https://api.nasa.gov/) to
 ## TEST
 Unit test is to check whether the string dates given were correctly parsed and written in nasa.txt
 It also checks that the files were dowloaded in the given file path
+
+
+##Docker
+
+dockerfile added to run in docker container
