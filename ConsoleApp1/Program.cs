@@ -17,11 +17,11 @@ namespace ConsoleApp1
     public class Program
     {
         static HttpClient client = new HttpClient();
-        public static string dir = AppDomain.CurrentDomain.BaseDirectory;
+        public static string dir = @"c:\Users";
         public static string filePath = @$"{dir}\nasa.txt";
         public static string apiKey = "NCPH9PtgXJ6fjJWc55MTv1NL9Hg6TOvnpfWfKLRM";
         public static string apiUrl = "https://api.nasa.gov/planetary/apod?api_key={0}&date={1}";
-        public static string imageFolderPath = "c:/Users/nasa_imgs/";
+        public static string imageFolderPath = @$"{dir}\nasa_imgs\";
         static void Main(string[] args)
         {
             RunAsync().GetAwaiter().GetResult();
@@ -32,35 +32,13 @@ namespace ConsoleApp1
             string[] dates = { "02/27/17", "June 2, 2018", "Jul-13-2016", "April 31, 2018" };
             if (!File.Exists(filePath))
             {
-                var format = "yyy-M-d";
                 CultureInfo provider = CultureInfo.InvariantCulture;
 
                 using (StreamWriter sw = File.CreateText(filePath))
                 {
                     foreach (var d in dates)
                     {
-                        string[] newDateSplitted = { };
-                        _ = new DateTime();
-                        bool formttedDate;
-                        DateTime newDate;
-                        if (d.Contains("/"))
-                        {
-                            newDateSplitted = d.Split("/");
-                            newDate = new DateTime(Convert.ToInt32(newDateSplitted[2].Length < 4 ? ("20" + newDateSplitted[2]) : newDateSplitted[2]),
-                                Convert.ToInt32(newDateSplitted[0]),
-                                Convert.ToInt32(newDateSplitted[1]));
-                            formttedDate = true;
-                        }
-                        else
-                        {
-                            formttedDate = DateTime.TryParse(d, out newDate);
-                        }
-
-                        if (formttedDate)
-                        {
-                            sw.WriteLine(newDate.ToString(format, provider));
-                        }
-
+                        sw.WriteLine(d);
                     }
                 }
             }
@@ -76,8 +54,6 @@ namespace ConsoleApp1
             {
                 nsaData = await response.Content.ReadAsAsync<NasaData>();
             }
-            
-            
 
             return nsaData;
         }
@@ -86,7 +62,7 @@ namespace ConsoleApp1
         {
             Process.Start(new ProcessStartInfo("chrome.exe")
             { UseShellExecute = true, Arguments = nsaData.Url });
-           
+
         }
         public static async Task RunAsync()
         {
@@ -98,24 +74,47 @@ namespace ConsoleApp1
                 if (isFileExists)
                 {
 
-
-
+                    var format = "yyy-M-d";
+                    CultureInfo provider = CultureInfo.InvariantCulture;
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     StreamReader file = new System.IO.StreamReader(@$"{filePath}");
-                    string date;
-                    while ((date = file.ReadLine()) != null)
+                    string d;
+                    while ((d = file.ReadLine()) != null)
                     {
 
-                        NasaData nsaData = await GetNasaDataAsync(date);
-                        await SaveImage(nsaData.Url);
-                        ShowNasaImg(nsaData);
+                        string[] newDateSplitted = { };
+                        _ = new DateTime();
+                        bool formttedDate;
+                        DateTime newDate;
+
+                        if (d.Contains("/"))
+                        {
+                            newDateSplitted = d.Split("/");
+                            newDate = new DateTime(Convert.ToInt32(newDateSplitted[2].Length < 4 ? ("20" + newDateSplitted[2]) : newDateSplitted[2]),
+                                Convert.ToInt32(newDateSplitted[0]),
+                                Convert.ToInt32(newDateSplitted[1]));
+                            formttedDate = true;
+                        }
+                        else
+                        {
+                            formttedDate = DateTime.TryParse(d, out newDate);
+                        }
+
+                        if (formttedDate)
+                        {
+                            NasaData nsaData = await GetNasaDataAsync(newDate.ToString(format, provider));
+                            await SaveImage(nsaData.Url);
+                            ShowNasaImg(nsaData);
+                        }
+
+
                     }
 
 
                 }
 
-           
+
 
             }
             catch (Exception e)
@@ -138,10 +137,6 @@ namespace ConsoleApp1
             return true;
         }
 
-        //private static void DownloadFileCompletedCallback(object sender, AsyncCompletedEventArgs e)
-        //{
-            
-        //}
     }
 
     public class NasaData
